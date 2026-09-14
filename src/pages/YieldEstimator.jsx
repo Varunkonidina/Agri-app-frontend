@@ -5,16 +5,14 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function YieldEstimator() {
   const [options, setOptions] = useState(null);
-
   const [values, setValues] = useState({
     State_Name: "Andhra Pradesh",
     District_Name: "SPSR NELLORE",
-    Season: "Summer",
+    Season: "Whole Year",
     Crop: "Rice",
     Crop_Year: CURRENT_YEAR,
     Area: 1200,
   });
-
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,11 +34,9 @@ export default function YieldEstimator() {
   const update = (key, v) =>
     setValues((prev) => {
       const next = { ...prev, [key]: v };
-
       if (key === "State_Name") {
         next.District_Name = options.districts_by_state[v][0];
       }
-
       return next;
     });
 
@@ -48,7 +44,6 @@ export default function YieldEstimator() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     api
       .yieldPredict(values)
       .then(setResult)
@@ -66,7 +61,6 @@ export default function YieldEstimator() {
             crop and cultivated area, then scales it to total expected production.
           </p>
         </div>
-
         <span className="page-tag">TabM · regression</span>
       </div>
 
@@ -223,7 +217,6 @@ export default function YieldEstimator() {
                 style={{ "--accent": "var(--yield)" }}
               >
                 <span className="label">Predicted yield</span>
-
                 <span className="value">
                   {result.predicted_yield.toFixed(2)}
                   <span className="unit">tonnes / ha</span>
@@ -234,7 +227,6 @@ export default function YieldEstimator() {
                 <span className="label">
                   Estimated total production ({values.Area} ha)
                 </span>
-
                 <span className="value">
                   {result.estimated_production.toLocaleString(undefined, {
                     maximumFractionDigits: 0,
@@ -249,3 +241,4 @@ export default function YieldEstimator() {
     </>
   );
 }
+
