@@ -4,25 +4,31 @@
    four instrument accents (weather / crop / fertilizer / yield).
 ------------------------------------------------------------------------ */
 :root {
-  --paper: #f1f0e5;
-  --paper-raised: #faf9f2;
-  --ink: #20241d;
-  --ink-soft: #4d5347;
-  --line: #cdcab4;
-  --line-strong: #a8a488;
+  --paper: #0b1020;
+  --paper-raised: #11182b;
 
-  --weather: #2f6690;
-  --weather-soft: #dfe9f0;
-  --crop: #4c7a3c;
-  --crop-soft: #e2ecdc;
-  --fertilizer: #a66a2e;
-  --fertilizer-soft: #f0e2d1;
-  --yield: #a9820c;
-  --yield-soft: #f1e8c9;
+  --ink: #f5f7ff;
+  --ink-soft: #a9b2c7;
 
-  --danger: #a53f3f;
+  --line: #26314a;
+  --line-strong: #3b4968;
 
-  --radius: 3px;
+  --weather: #3b82f6;
+  --weather-soft: #172d55;
+
+  --crop: #8b5cf6;
+  --crop-soft: #2a1f4d;
+
+  --fertilizer: #f5b82e;
+  --fertilizer-soft: #493814;
+
+  --yield: #a855f7;
+  --yield-soft: #32194f;
+
+  --danger: #ef4444;
+
+  --radius: 6px;
+
   --font-display: "Fraunces", "Iowan Old Style", ui-serif, serif;
   --font-ui: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -693,4 +699,94 @@ a:focus-visible {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--ink);
+}
+
+/* ---------- neural field (canvas hero backdrop) ---------- */
+
+.neural-field {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius); 
+   overflow: hidden;
+}
+
+.neural-field canvas {
+  display: block;
+}
+
+/* ---------- 3D tilt card ---------- */
+
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card-content {
+  transform: translateZ(18px);
+  transform-style: preserve-3d;
+}
+
+.tilt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: overlay;
+  opacity: 0.7;
+}
+
+/* page transition root should not clip 3D children */
+.main {
+  perspective: 1400px;
+}
+
+/* ---------- hero with neural field ---------- */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-field {
+  position: absolute;
+  inset: -20px -48px auto auto;
+  width: 100%;
+  max-width: 820px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  .hero-field {
+    display: none;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* live-value flourish on readouts */
+.big-readout .value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+/* ---------- animated nav active indicator ---------- */
+
+.nav-item {
+  position: relative;
+}
+
+.nav-active-underline {
+  position: absolute;
+  left: -3px;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent, var(--ink));
 }

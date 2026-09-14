@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -11,7 +12,9 @@ import {
   ReferenceLine,
 } from "recharts";
 import api from "../lib/api";
-
+import PageTransition from "../components/PageTransition";
+import AnimatedNumber from "../components/AnimatedNumber";
+import NeuralField from "../components/NeuralField";
 const METRICS = [
   { key: "T2M", label: "Temperature", unit: "°C" },
   { key: "RH2M", label: "Humidity", unit: "%" },
@@ -50,7 +53,6 @@ export default function WeatherStation() {
   const chartData = useMemo(() => {
     const past = (history || []).map((d) => ({ ...d, kind: "observed" }));
     const future = (forecast || []).map((d) => ({ ...d, kind: "forecast" }));
-    // bridge point so the forecast line connects to the last observed point
     if (past.length && future.length) {
       const bridge = { ...past[past.length - 1], kind: "forecast" };
       return [...past, bridge, ...future];
@@ -64,10 +66,11 @@ export default function WeatherStation() {
     forecast && forecast.reduce((s, d) => s + d[metric], 0) / forecast.length;
 
   return (
-    <>
+    <PageTransition>
       <div className="page-head" style={{ "--accent": "var(--weather)" }}>
         <div>
           <h2>Weather Station</h2>
+           <NeuralField className="hero-field" height={520} nodeCount={100} />
           <p>
             TimeMixer reads the last 30 daily readings and projects the next 7 days across
             five atmospheric variables.
@@ -81,48 +84,78 @@ export default function WeatherStation() {
           <div className="section-title">Current station reading</div>
 
           {latest ? (
-            <div className="field-grid">
+            <motion.div
+              className="field-grid"
+              initial="initial"
+              animate="animate"
+              variants={{ animate: { transition: { staggerChildren: 0.05 } } }}
+            >
               {METRICS.map((m) => (
-                <div className="field" key={m.key}>
+                <motion.div
+                  className="field"
+                  key={m.key}
+                  variants={{
+                    initial: { opacity: 0, y: 8 },
+                    animate: { opacity: 1, y: 0 },
+                  }}
+                >
                   <label>
                     {m.label} <span className="unit">{m.unit}</span>
                   </label>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 18 }}>
-                    {latest[m.key].toFixed(1)}
+                    <AnimatedNumber value={latest[m.key]} decimals={1} />
                   </div>
-                </div>
+                </motion.div>
               ))}
               <div className="field">
                 <label>As of</label>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 18 }}>{latest.date}</div>
               </div>
-            </div>
+            </motion.div>
           ) : (
             <p className="hint-msg">Loading the latest 30-day observation window…</p>
           )}
 
           <div className="actions">
-            <button className="btn" style={{ background: "var(--weather)", borderColor: "var(--weather)" }} onClick={runForecast} disabled={loading || !history}>
+            <motion.button
+              className="btn"
+              style={{ background: "var(--weather)", borderColor: "var(--weather)" }}
+              onClick={runForecast}
+              disabled={loading || !history}
+              whileHover={{ scale: loading ? 1 : 1.03 }}
+              whileTap={{ scale: loading ? 1 : 0.97 }}
+            >
               {loading ? <span className="spinner" /> : "Generate 7-day forecast"}
-            </button>
+            </motion.button>
             {forecast && <span className="hint-msg">Forecast starts the day after {latest?.date}</span>}
           </div>
 
           {error && <div className="error-msg">{error}</div>}
 
-          {forecast && (
-            <div className="stat-strip">
-              {METRICS.slice(0, 3).map((m) => (
-                <div className="stat-cell" key={m.key}>
-                  <div className="k">{m.label} avg</div>
-                  <div className="v">
-                    {(forecast.reduce((s, d) => s + d[m.key], 0) / forecast.length).toFixed(1)}
-                    {m.unit}
+          <AnimatePresence>
+            {forecast && (
+              <motion.div
+                className="stat-strip"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {METRICS.slice(0, 3).map((m) => (
+                  <div className="stat-cell" key={m.key}>
+                    <div className="k">{m.label} avg</div>
+                    <div className="v">
+                      <AnimatedNumber
+                        value={forecast.reduce((s, d) => s + d[m.key], 0) / forecast.length}
+                        decimals={1}
+                        suffix={m.unit}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="panel-section">
@@ -147,7 +180,13 @@ export default function WeatherStation() {
             ))}
           </div>
 
-          <div style={{ width: "100%", height: 260 }}>
+          <motion.div
+            style={{ width: "100%", height: 260 }}
+            key={metric}
+            initial={{ opacity: 0.4 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <ResponsiveContainer>
               <ComposedChart data={chartData} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
                 <CartesianGrid stroke="var(--line)" strokeDasharray="2 4" vertical={false} />
@@ -184,7 +223,9 @@ export default function WeatherStation() {
                   dataKey={(d) => (d.kind === "observed" ? d[metric] : null)}
                   stroke="none"
                   fill="var(--weather-soft)"
-                  isAnimationActive={false}
+                  isAnimationActive={true}
+                  animationDuration={700}
+                  animationEasing="ease-out"
                 />
                 <Line
                   type="monotone"
@@ -192,7 +233,9 @@ export default function WeatherStation() {
                   stroke="var(--weather)"
                   strokeWidth={2}
                   dot={false}
-                  isAnimationActive={false}
+                  isAnimationActive={true}
+                  animationDuration={700}
+                  animationEasing="ease-out"
                   connectNulls={false}
                 />
                 <Line
@@ -202,12 +245,14 @@ export default function WeatherStation() {
                   strokeWidth={2}
                   strokeDasharray="4 3"
                   dot={{ r: 2.5 }}
-                  isAnimationActive={false}
+                  isAnimationActive={true}
+                  animationDuration={700}
+                  animationEasing="ease-out"
                   connectNulls={false}
                 />
               </ComposedChart>
             </ResponsiveContainer>
-          </div>
+          </motion.div>
           <div className="legend-row" style={{ marginTop: 6, marginBottom: 0 }}>
             <span className="legend-chip">
               <span className="swatch" style={{ background: "var(--weather)" }} /> observed
@@ -216,11 +261,14 @@ export default function WeatherStation() {
               <span className="swatch" style={{ background: "var(--yield)" }} /> forecast
             </span>
             {forecastAvg != null && (
-              <span className="legend-chip">7-day avg {activeMetric.label.toLowerCase()}: {forecastAvg.toFixed(1)}{activeMetric.unit}</span>
+              <span className="legend-chip">
+                7-day avg {activeMetric.label.toLowerCase()}: {forecastAvg.toFixed(1)}
+                {activeMetric.unit}
+              </span>
             )}
           </div>
         </div>
       </div>
-    </>
+    </PageTransition>
   );
 }

@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../lib/api";
+import PageTransition from "../components/PageTransition";
+import AnimatedNumber from "../components/AnimatedNumber";
+import ProbBar from "../components/ProbBar";
+import NeuralField from "../components/NeuralField";
 
 const NUMERIC_FIELDS = [
   { key: "Soil_pH", label: "Soil pH", default: 6.07, step: 0.01 },
@@ -65,10 +70,11 @@ export default function FertilizerAdvisor() {
   const maxProb = result ? result.top_predictions[0].probability : 1;
 
   return (
-    <>
+    <PageTransition>
       <div className="page-head" style={{ "--accent": "var(--fertilizer)" }}>
         <div>
           <h2>Fertilizer Advisor</h2>
+           <NeuralField className="hero-field" height={520} nodeCount={100} />
           <p>
             A multi-step TabNet model weighs soil chemistry against crop stage, irrigation and
             season to recommend a treatment.
@@ -119,14 +125,16 @@ export default function FertilizerAdvisor() {
               </div>
 
               <div className="actions">
-                <button
+                <motion.button
                   className="btn"
                   type="submit"
                   style={{ background: "var(--fertilizer)", borderColor: "var(--fertilizer)" }}
                   disabled={loading}
+                  whileHover={{ scale: loading ? 1 : 1.03 }}
+                  whileTap={{ scale: loading ? 1 : 0.97 }}
                 >
                   {loading ? <span className="spinner" /> : "Recommend fertilizer"}
-                </button>
+                </motion.button>
               </div>
               {error && <div className="error-msg">{error}</div>}
             </form>
@@ -135,45 +143,58 @@ export default function FertilizerAdvisor() {
 
         <div className="panel-section">
           <div className="section-title">Recommendation</div>
-          {!result ? (
-            <div className="readout-empty">
-              Fill in the field profile and run the advisor to see the recommended treatment.
-            </div>
-          ) : (
-            <>
-              <div className="big-readout" style={{ "--accent": "var(--fertilizer)" }}>
-                <span className="label">Recommended</span>
-                <span className="value">{result.recommended_fertilizer}</span>
-              </div>
-              <div className="sub-readout">
-                <span className="label">Model confidence</span>
-                <span className="value">{(result.confidence * 100).toFixed(1)}%</span>
-              </div>
-
-              <div style={{ marginTop: 22 }}>
-                <div className="section-title" style={{ marginBottom: 12 }}>All candidates</div>
-                <div className="prob-list">
-                  {result.top_predictions.map((p, i) => (
-                    <div className="prob-row" key={p.fertilizer}>
-                      <span className={"name" + (i === 0 ? " top" : "")}>{p.fertilizer}</span>
-                      <span className="prob-track">
-                        <span
-                          className="prob-fill"
-                          style={{
-                            width: `${(p.probability / maxProb) * 100}%`,
-                            background: "var(--fertilizer)",
-                          }}
-                        />
-                      </span>
-                      <span className="pct">{(p.probability * 100).toFixed(1)}%</span>
-                    </div>
-                  ))}
+          <AnimatePresence mode="wait">
+            {!result ? (
+              <motion.div
+                key="empty"
+                className="readout-empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Fill in the field profile and run the advisor to see the recommended treatment.
+              </motion.div>
+            ) : (
+              <motion.div
+                key={result.recommended_fertilizer}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="big-readout" style={{ "--accent": "var(--fertilizer)" }}>
+                  <span className="label">Recommended</span>
+                  <span className="value">{result.recommended_fertilizer}</span>
                 </div>
-              </div>
-            </>
-          )}
+                <div className="sub-readout">
+                  <span className="label">Model confidence</span>
+                  <span className="value">
+                    <AnimatedNumber value={result.confidence * 100} decimals={1} suffix="%" />
+                  </span>
+                </div>
+
+                <div style={{ marginTop: 22 }}>
+                  <div className="section-title" style={{ marginBottom: 12 }}>
+                    All candidates
+                  </div>
+                  <div className="prob-list">
+                    {result.top_predictions.map((p, i) => (
+                      <ProbBar
+                        key={p.fertilizer}
+                        name={p.fertilizer}
+                        probability={p.probability}
+                        maxProb={maxProb}
+                        accent="var(--fertilizer)"
+                        top={i === 0}
+                        index={i}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </>
+    </PageTransition>
   );
 }
