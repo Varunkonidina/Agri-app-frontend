@@ -21,8 +21,15 @@ export const api = {
   health: () => unwrap(client.get("/api/health")),
 
   weatherHistory: () => unwrap(client.get("/api/weather/history")),
-  weatherForecast: (sequence) =>
-    unwrap(client.post("/api/weather/forecast", sequence ? { sequence } : {})),
+  weatherRange: () => unwrap(client.get("/api/weather/range")),
+  // Pass either { sequence } for a custom 30-day window, or { date } to run
+  // the model "as of" a specific date. Omit both for the latest window.
+  weatherForecast: ({ sequence, date } = {}) =>
+    unwrap(client.post("/api/weather/forecast", sequence ? { sequence } : date ? { date } : {})),
+
+  weatherLocations: () => unwrap(client.get("/api/weather/locations")),
+  weatherRegionalForecast: (payload) =>
+    unwrap(client.post("/api/weather/regional-forecast", payload)),
 
   cropOptions: () => unwrap(client.get("/api/crop/options")),
   cropRecommend: (payload) => unwrap(client.post("/api/crop/recommend", payload)),

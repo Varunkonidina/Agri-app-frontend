@@ -13,7 +13,7 @@ const FIELDS = [
   { key: "temperature", label: "Temperature", unit: "°C", default: 20.9, min: 8, max: 44, step: 0.1 },
   { key: "humidity", label: "Humidity", unit: "%", default: 82.0, min: 14, max: 100, step: 0.1 },
   { key: "ph", label: "Soil pH", unit: "", default: 6.5, min: 3.5, max: 10, step: 0.05 },
-  { key: "rainfall", label: "Rainfall", unit: "mm", default: 202.9, min: 20, max: 300, step: 0.5 },
+  { key: "rainfall", label: "Rainfall", unit: "mm", default: 202.5, min: 20, max: 300, step: 0.5 },
 ];
 
 export default function CropAdvisor() {

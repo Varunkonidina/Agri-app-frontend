@@ -14,7 +14,8 @@ import {
 import api from "../lib/api";
 import PageTransition from "../components/PageTransition";
 import AnimatedNumber from "../components/AnimatedNumber";
-import NeuralField from "../components/NeuralField";
+import RegionalOutlook from "../components/RegionalOutlook";
+
 const METRICS = [
   { key: "T2M", label: "Temperature", unit: "°C" },
   { key: "RH2M", label: "Humidity", unit: "%" },
@@ -29,22 +30,36 @@ export default function WeatherStation() {
   const [metric, setMetric] = useState("T2M");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [range, setRange] = useState(null);
+  const [asOfDate, setAsOfDate] = useState("");
+  const [dateNote, setDateNote] = useState(null);
+  const [method, setMethod] = useState("timemixer");
 
   useEffect(() => {
     api
       .weatherHistory()
       .then((res) => setHistory(res.input_sequence))
       .catch((e) => setError(e.message));
+    api.weatherRange().then(setRange).catch(() => {});
   }, []);
 
   const runForecast = () => {
     setLoading(true);
     setError(null);
+    setDateNote(null);
     api
-      .weatherForecast()
+      .weatherForecast(asOfDate ? { date: asOfDate } : {})
       .then((res) => {
         setHistory(res.input_sequence);
         setForecast(res.forecast);
+        setMethod(res.method);
+        if (res.date_out_of_range) {
+          const reason =
+            res.method === "seasonal_climatology"
+              ? `${asOfDate} is beyond even the seasonal estimate's range, so this used ${res.effective_date} instead.`
+              : `${asOfDate} isn't in the dataset, so this used ${res.effective_date} instead.`;
+          setDateNote(reason);
+        }
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -70,7 +85,6 @@ export default function WeatherStation() {
       <div className="page-head" style={{ "--accent": "var(--weather)" }}>
         <div>
           <h2>Weather Station</h2>
-           <NeuralField className="hero-field" height={520} nodeCount={100} />
           <p>
             TimeMixer reads the last 30 daily readings and projects the next 7 days across
             five atmospheric variables.
@@ -116,6 +130,28 @@ export default function WeatherStation() {
             <p className="hint-msg">Loading the latest 30-day observation window…</p>
           )}
 
+          <div className="field" style={{ maxWidth: 220, marginTop: 16 }}>
+            <label htmlFor="asof-date">
+              Forecast as of <span className="unit">optional</span>
+            </label>
+            <input
+              id="asof-date"
+              type="date"
+              value={asOfDate}
+              min={range?.min_date}
+              max={range?.seasonal_max_date}
+              onChange={(e) => setAsOfDate(e.target.value)}
+              placeholder="Latest available"
+            />
+            {range && (
+              <span className="field-note">
+                Real model data: {range.min_date} – {range.max_date}. Dates up to{" "}
+                {range.seasonal_max_date} use a seasonal climatology estimate instead. Leave
+                blank for the latest window.
+              </span>
+            )}
+          </div>
+
           <div className="actions">
             <motion.button
               className="btn"
@@ -130,7 +166,30 @@ export default function WeatherStation() {
             {forecast && <span className="hint-msg">Forecast starts the day after {latest?.date}</span>}
           </div>
 
+          {forecast && (
+            <div style={{ marginTop: 10 }}>
+              <span
+                className="page-tag"
+                style={{
+                  "--accent": method === "timemixer" ? "var(--weather)" : "var(--yield)",
+                }}
+              >
+                {method === "timemixer"
+                  ? "TimeMixer · real 30-day window"
+                  : "Seasonal climatology · typical-for-date estimate"}
+              </span>
+            </div>
+          )}
+
           {error && <div className="error-msg">{error}</div>}
+          {dateNote && (
+            <div
+              className="error-msg"
+              style={{ color: "var(--ink-soft)", borderColor: "var(--line-strong)", background: "var(--paper)" }}
+            >
+              {dateNote}
+            </div>
+          )}
 
           <AnimatePresence>
             {forecast && (
@@ -269,6 +328,8 @@ export default function WeatherStation() {
           </div>
         </div>
       </div>
+
+      <RegionalOutlook />
     </PageTransition>
   );
 }
