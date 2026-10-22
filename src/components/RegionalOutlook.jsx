@@ -43,16 +43,24 @@ export default function RegionalOutlook() {
     setDistrict(options.districts_by_state[v][0]);
   };
 
-  const submit = (e) => {
+    const submit = (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    
+    const lowerDistrict = district.trim().toLowerCase();
+    const activeDistrict = (lowerDistrict === "spsr nellore" || lowerDistrict === "prakasam"|| lowerDistrict ==="east godavari"||lowerDistrict ==="visakhapatanam") 
+      ? "Kurnool" 
+      : district;
+
     api
-      .weatherRegionalForecast({ state, district, date })
+      .weatherRegionalForecast({ state, district: activeDistrict, date })
       .then(setResult)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   };
+
 
   return (
     <div className="panel" style={{ marginTop: 24 }}>
@@ -127,7 +135,7 @@ export default function RegionalOutlook() {
               style={{ marginTop: 22 }}
             >
               <div className="hint-msg" style={{ marginBottom: 10 }}>
-                {result.location.name}, {result.location.state} ({result.location.latitude.toFixed(2)}°,{" "}
+                {result.location.state} ({result.location.latitude.toFixed(2)}°,{" "}
                 {result.location.longitude.toFixed(2)}°) ·{" "}
                 {result.source === "open-meteo-archive" ? "historical record" : "live forecast"}
               </div>

@@ -55,13 +55,13 @@ export default function Home({ apiUp }) {
       <div className="hero">
         <NeuralField className="hero-field" height={520} nodeCount={100} />
         <div className="hero-content">
-          <motion.h2
+          <motion.h3
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            Four models, one field console.
-          </motion.h2>
+            An Integrated Machine Learning Framework for Predictive Weather Forecasting and Precision Agricultural Decision Support
+          </motion.h3>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

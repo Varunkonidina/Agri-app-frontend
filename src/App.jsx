@@ -40,7 +40,7 @@ export default function App() {
           >
             Aɪ
           </motion.div>
-          <h1>AgriIntel</h1>
+          
           <span>Weather &amp; precision agriculture models, served live</span>
         </div>
 
@@ -91,7 +91,7 @@ export default function App() {
       </aside>
 
       <main className="main">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" >
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Home apiUp={apiUp} />} />
             <Route path="/weather" element={<WeatherStation />} />

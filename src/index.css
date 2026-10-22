@@ -223,7 +223,7 @@ a:focus-visible {
 
 .main {
   padding: 40px 48px 80px;
-  max-width: 980px;
+  max-width: 1000px;
 }
 
 @media (max-width: 860px) {
